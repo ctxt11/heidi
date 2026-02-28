@@ -1,49 +1,52 @@
-x_speed = 0; // reset horizontal speed 
-
-y_speed += grav; // add gravity to y_speed
-if keyboard_check(vk_right) { // if the right arrow key is pressed
-
-    x_speed = movement_speed; // set the horizontal speed to heidi's movement_speed
-
-} else if keyboard_check(vk_left) { // otherwise, if the left arrow key is pressed
-
-    x_speed = -movement_speed; // set the horizontal speed to negative heidi's movement_speed, making her move left
-
-}
-move_and_collide(x_speed, y_speed, oSolid);
-if (place_meeting(x, y + 1, oSolid)) { // if heidi is on the ground
-
-    if (keyboard_check_pressed(vk_space)) { // and the up arrow key is pressed
-
-        y_speed = -7; // make heidi jump by setting her y_speed to a negative value
-
-    } else { // otherwise, if heidi is on the ground but not jumping
-
-        y_speed = 0; // set her y_speed to 0 so she doesn't fall through the ground
-
+// 1. Horizontal Movement & Direction
+x_speed = 0; 
+if (visible) { // Only allow movement if the player hasn't died/won yet
+    if keyboard_check(vk_right) {
+        x_speed = movement_speed;
+        image_xscale = -1; 
+    } else if keyboard_check(vk_left) {
+        x_speed = -movement_speed;
+        image_xscale = 1; 
     }
-
 }
-if (place_meeting(x, y, oSpikes)) { // if heidi collides with the spikes
 
-    room_restart() // restart the level
+// 2. Gravity & Jumping
+y_speed += grav; 
+move_and_collide(x_speed, y_speed, oSolid);
 
+if (place_meeting(x, y + 1, oSolid)) {
+    if (keyboard_check_pressed(vk_space) && visible) {
+        y_speed = -7; 
+    } else {
+        y_speed = 0; 
+    }
 }
-if (y > room_height or y < 0 or x > room_width or x < 0) { // if the player is outside of the room
 
-    room_restart(); 
-
+// 3. Death Logic (Spikes OR Falling out of bounds)
+// We check if Y is greater than room_height (fell down)
+if (place_meeting(x, y, oSpikes) || y > room_height || y < 0 || x > room_width || x < 0) {
+    if (visible) { // Only trigger this once
+        if (instance_exists(oGameManager)) {
+            oGameManager.vignette_alpha = 0.6; 
+        }
+        visible = false; 
+        x_speed = 0;
+        y_speed = 0;
+        // Start 3-second timer
+        alarm[0] = game_get_speed(gamespeed_fps) * 3; 
+    }
 }
-if keyboard_check(vk_right) {
 
-    x_speed = movement_speed; 
-
-    image_xscale = -1; // flip heidi's sprite so she faces right
-
-} else if keyboard_check(vk_left) {
-
-    x_speed = -movement_speed; 
-
-    image_xscale = 1; // reset her sprite so she faces left
-
+// 4. Win Logic (Flag)
+if (place_meeting(x, y, oFlag)) {
+    if (visible) {
+        if (instance_exists(oGameManager)) {
+            oGameManager.show_win_screen = true; 
+        }
+        visible = false;
+        x_speed = 0;
+        y_speed = 0;
+        // Start 4-second timer
+        alarm[1] = game_get_speed(gamespeed_fps) * 4; 
+    }
 }
