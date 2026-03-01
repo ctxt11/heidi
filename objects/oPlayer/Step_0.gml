@@ -46,7 +46,10 @@ if (place_meeting(x, y, oFlag)) {
         visible = false;
         x_speed = 0;
         y_speed = 0;
-        // Start 4-second timer
-        alarm[1] = game_get_speed(gamespeed_fps) * 4; 
+        
+        // This starts the countdown. When it hits 0, Alarm 1 runs.
+        if (alarm[1] == -1) { 
+            alarm[1] = game_get_speed(gamespeed_fps) * 4; 
+        }
     }
 }
